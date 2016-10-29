@@ -1,0 +1,25 @@
+{
+	"entry": [
+		{
+			"messaging": [
+				{
+					"timestamp": 1477242622309,
+					"message": {
+						"text": "My team name is \"Net-tricks and Skill\".",
+						"mid": "mid.1477242622309:3666b2dd23",
+						"seq": 116
+					},
+					"recipient": {
+						"id": "1763943487196046"
+					},
+					"sender": {
+						"id": "1072169239530678"
+					}
+				}
+			],
+			"id": "1763943487196046",
+			"time": 1477242622413
+		}
+	],
+	"object": "page"
+}
