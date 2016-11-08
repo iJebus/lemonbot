@@ -8,23 +8,19 @@ import requests
 
 from copy import deepcopy
 from flask import Flask, request
-from sports import create_session, search_team_name
+from sports import create_session, search_team_name, load_results_page, \
+     parse_results_page, next_game
 
 app = Flask(__name__)
 
 response_template = {
-    "message": {
+    "action": {
         "recipient": {
             "id": None
         },
-        "message": {
-            "text": None
-        }
+        "sender_action": None
     },
     "button": {
-        "recipient": {
-            "id": None
-        },
         'message': {
             'attachment': {
                 'type': 'template',
@@ -34,15 +30,39 @@ response_template = {
                     'buttons': None
                 }
             }
-        }
-    },
-    "action": {
+        },
         "recipient": {
             "id": None
+        }
+    },
+    "generic": {
+        "message": {
+            "attachment": {
+                "payload": {
+                    "elements": None,
+                    "template_type": "generic"
+                },
+                "type": "template"
+            }
         },
-        "sender_action": None
+        "recipient": {
+            "id": None
+        }
+    },
+    "message": {
+        "message": {
+            "text": None
+        },
+        "recipient": {
+            "id": None
+        }
     }
 }
+
+
+@app.route('/', methods=['GET'])
+def home():
+    return '<h1>Hi :3</h1>'
 
 
 @app.route('/webhook', methods=['GET'])
@@ -63,10 +83,6 @@ def webhook():
     return "ok", 200
 
 
-def ask_for_team():
-    pass
-
-
 def message_event_router(messaging_event):
     sender_id = messaging_event["sender"]["id"]
     send_status(sender_id, 'seen')
@@ -81,41 +97,59 @@ def message_event_router(messaging_event):
 def message_router(message):
     sender_id = message["sender"]["id"]
     message_text = message["message"]["text"]
-    if '"' in message_text:
+    if 'team:' in message_text.lower():
         s = create_session('lords')
-        team_name = message_text.split('"')[1]
+        team_name = message_text.split(':')[1].strip()
         possible_teams = search_team_name(s, team_name)
-        buttons = []
-        log(possible_teams)
-        for team in possible_teams:  # change this to use generic template \
-                    # and element / bubbles
-            button = {
-                "type": "postback",
-                "title": "Team: {}\nDivision: {}\nSession: {}".format(
-                    team['name'],
-                    team['division'],
-                    team['session']
-                ),
-                "payload": json.dumps({
-                    "player_id": sender_id,
-                    "team_id": team['id']
-                })
+        if len(possible_teams) > 10:
+            send_text_message(
+                sender_id, (
+                    'Woah, more than ten teams were found. I\'ll show the '
+                    'first ten but maybe try again and be more specific.'
+                )
+            )
+        elif not possible_teams:
+            send_text_message(
+                sender_id, (
+                    'No matches :S Case-sensitive at the moment so check that '
+                    'and/or your spelling.'
+                )
+            )
+        elements = []
+        for team in possible_teams[:10]:
+            element = {
+                "title": team['name'],
+                "subtitle": '{}, {}'.format(team['session'], team['division']),
+                "buttons": [
+                    {
+                        "type": "postback",
+                        "title": "Stats",
+                        "payload": json.dumps({
+                            "player_id": sender_id,
+                            "team_id": team['id'],
+                            "team_name": team['name'],
+                            "action": "stats"
+                        })
+                    },
+                    {
+                        "type": "postback",
+                        "title": "Next game time",
+                        "payload": json.dumps({
+                            "player_id": sender_id,
+                            "team_id": team['id'],
+                            "team_name": team['name'],
+                            "action": "next_game"
+                        })
+                    }
+                ]
             }
-            buttons.append(button)
-        send_button_message(
-            sender_id,
-            'Which one is your team?',
-            buttons
-        )
-        # send_text_message(
-        #     sender_id, 'Roger-doger, captain.'
-        # )
+            elements.append(element)
+        send_generic_message(sender_id, elements)
     else:
         send_text_message(
             sender_id, (
                 'Sure, whatever. So, what\'s your team name? '
-                'Use quotes to indicate the that it\'s the name. '
-                'e.g. My team name is "Net-tricks and Skill".'
+                'I\'m just a dumb robot so say, "Team: Blah" for me to get it.'
             )
         )
 
@@ -123,9 +157,15 @@ def message_router(message):
 def postback_router(message):
     sender_id = message["sender"]["id"]
     postback_payload = message["postback"]["payload"]
-    if postback_payload:
-        send_text_message(sender_id, "posted baaaaaaaack, thanks!")
-    # send_postback_message(sender_id)
+    payload = json.loads(postback_payload)
+    s = create_session('lords')
+    results_page = load_results_page(s, payload['team_id'])
+    stats, times = parse_results_page(results_page, payload['team_name'])
+    if payload['action'] == 'next_game':
+        send_text_message(sender_id, next_game(times))
+    elif payload['action'] == 'stats':
+        for k, v in stats.iteritems():
+            send_text_message(sender_id, k + ': ' + v)
 
 
 def send_status(recipient_id, status):
@@ -152,26 +192,18 @@ def send_button_message(recipient_id, text, buttons):
     message['recipient']['id'] = recipient_id
     message['message']['attachment']['payload']['text'] = text
     message['message']['attachment']['payload']['buttons'] = buttons
-    # [
-    #     {
-    #         'buttons': [
-    #             {
-    #                 'type': 'postback',
-    #                 'payload': 'DEVELOPER_DEFINED_PAYLOAD',
-    #                 'title': 'Bookmark Item'
-    #             }
-    #         ],
-    #         # 'subtitle': 'Soft white cotton t-shirt is back in style',
-    #         # 'image_url': \
-    #         # 'http://petersapparel.parseapp.com/img/whiteshirt.png',
-    #         'title': 'Classic White T-Shirt'
-    #     }
-    # ]
-    log(message)
+    post_to_facebook(message)
+
+
+def send_generic_message(recipient_id, elements):
+    message = deepcopy(response_template['generic'])
+    message['recipient']['id'] = recipient_id
+    message['message']['attachment']['payload']['elements'] = elements
     post_to_facebook(message)
 
 
 def post_to_facebook(message):
+    log(message)
     data = json.dumps(message)
     r = requests.post(
         "https://graph.facebook.com/v2.6/me/messages",
@@ -182,9 +214,8 @@ def post_to_facebook(message):
     if r.status_code != 200:
         log(r.status_code)
         log(r.text)
-    return r
 
 
-def log(message):  # simple wrapper for logging to stdout
+def log(message):
     print(str(message))
     sys.stdout.flush()

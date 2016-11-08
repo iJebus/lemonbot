@@ -27,17 +27,20 @@ def create_session(org):
 def search_team_name(session, name):
     payload = {'term': name}
     r = session.get(BASE + '/autocomplete/leagues', params=payload)
-    return [parse_team(x) for x in r.json()]
+    return [parse_team(x) for x in r.json() if parse_team(x)]
 
 
 def parse_team(team):
-    session, division, name = team['label'].split(' - ')
-    return {
-        'session': session,
-        'division': division,
-        'name': name,
-        'id': str(team['id'])
-    }
+    try:
+        session, division, name = team['label'].split(' - ')
+        return {
+            'session': session,
+            'division': division,
+            'name': name,
+            'id': str(team['id'])
+        }
+    except ValueError as e:
+        return None
 
 
 def parse_results_page(html, team):
@@ -56,9 +59,19 @@ def parse_team_stats(bs_standings_table, team):
 
 
 def parse_game_times(bs_times_table, team):
+    """Hard coded TZ info... and oh god fix this blregghhh."""
     tds = bs_times_table.find_all('td', text=re.compile(team))
     td_family = [list(x.parent.stripped_strings) for x in tds]
-    return [x[1] for x in td_family if 'bye' not in x]
+    result = []
+    for x in td_family:
+        if 'bye' not in x and len(x) > 5:
+            if 'AM' in x[5] or 'PM' in x[5]:
+                result.append('{} {} +0800'.format(x[1], x[5]))
+    return result
+    # return [
+    #     '{} {} +0800'.format(x[1], x[5]) for x in td_family if
+    #     'bye' not in x and ('AM' in x[5] or 'PM' in x[5])
+    # ]
 
 
 def load_results_page(session, id):
@@ -70,16 +83,18 @@ def load_results_page(session, id):
 def next_game(times):
     try:
         now = arrow.utcnow()
-        arrow_times = [arrow.get(x, 'D MMMM YYYY') for x in times]
+        arrow_times = [arrow.get(x, 'D MMMM YYYY h:mm A Z') for x in times]
         future_times = [x for x in arrow_times if x > now]
-        return future_times[0]
+        next_game = future_times[0].format('DD MMMM YYYY, h:mm A')
+        next_game_human = future_times[0].humanize()
+        return '{}. So, roughly {}.'.format(next_game, next_game_human)
     except IndexError as e:
-        return
+        return 'No future games listed currently.'
 
 
 if __name__ == "__main__":
     s = create_session('lords')
-    possible_teams = search_team_name(s, 'Net-tricks')
+    possible_teams = search_team_name(s, 'n')
     team = possible_teams[0]
     results_page = load_results_page(s, team['id'])
 
