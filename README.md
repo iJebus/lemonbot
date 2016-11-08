@@ -4,11 +4,28 @@
 
 Lemonbot is *very* basic Facebook chatbot that will scrape game time and team information regarding a requested team from a sporting facility's website.
 
+## How do I use it?
+
+1. Browse to the [LemonBot page](https://www.facebook.com/LemonBot-1763943487196046/) and click 'Message', or use [this link](http://m.me/1763943487196046) to open a conversation directly.
+2. Send a message! It'll tell you what to do. If that's a bit daunting, the screenshot below covers all the functionality.
+
+![example of lemonbot usage](images/demo.png  "example of lemonbot usage")
+
+P.S., it wasn't very nice of me to say dumb robot, was it. :(
+
 ## Why make it?
 
 1. I had wanted an excuse to play with Zappa and this was a suitable use case.
 2. I play netball at this venue and want to make something more convenient for myself than checking their website.
 3. I needed a project for a university unit relating to cloud computing (CITS5503) that demonstrates a practical application of AWS Lambda.
+
+## What does it use?
+
+* [Facebook Messenger Platform](https://developers.facebook.com/docs/messenger-platform)
+* [Zappa](https://github.com/Miserlou/Zappa)
+  * Python 2.7.12
+  * Flask
+  * AWS Lambda
 
 ### Functional requirements
 
@@ -25,14 +42,6 @@ Lemonbot is *very* basic Facebook chatbot that will scrape game time and team in
 * Respond quickly (i.e., within a few seconds)
 * Run on Facebook
 * Scale horizontally (because Lambda, yay)
-
-## What does it use?
-
-* [Facebook Messenger Platform](https://developers.facebook.com/docs/messenger-platform)
-* [Zappa](https://github.com/Miserlou/Zappa)
-  * Python 2.7.12
-  * Flask
-  * AWS Lambda
 
 ## How could it be improved?
 
