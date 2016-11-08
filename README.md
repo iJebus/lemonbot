@@ -55,6 +55,7 @@ Brody's blog post is a great place to get started with the very basics, and will
 * Templates for different types of responses / messages available in Facebook (e.g., simple text message, or a message with buttons?)
 * All the website scraping and parsing stuff
 * Handling of message seen, typing on/off indicators
+* Postback message handling
 
 ## Fun Facebook caveats
 
