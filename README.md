@@ -51,11 +51,11 @@ Primarily...
 * Send messages regarding game time on a schedule, e.g., the day before the game
 * Store 'favourites' or at least associate a team/teams with a user so that users don't need to request by teams name each time. DynamoDB again could be used to store team/player associations
 
-## How could I run this?
+## How can I run this code/build this project?
 
-1. Firstly, I'd recommend running through Hartley Brody's tutorial, which incidently is linked below under Resources. This will help you create a Facebook Page/App and get that configured for messaging.
+1. Firstly, I'd recommend running through Hartley Brody's tutorial, which incidently is linked below under the Resources heading. This will help you create a Facebook Page/App and get that configured for messaging.
 2. Get Zappa installed; that's also linked below. Note that I'm using v0.27.1 and your mileage may vary with newer releases.
-3. Create an AWS account and IAM user and all of that. Zappa documentation has details on those and what it specifically needs, so read that. You'll need to create an S3 bucket, but that's covered too.
+3. Create an AWS account and IAM user and all of that. Zappa documentation has details on those and what permissions it needs specifically, so read that. You'll need to create an S3 bucket, but that's covered too.
 4. Okay now we're finally getting somewhere. After cloning this project, you'll need to create `zappa_settings.json` and populate it with values appropriate to your project. If you have followed Brody's tutorial and read the Zappa documentation, this won't be difficult. There's an example below.
 5. You're ready to deploy! Run `zappa deploy dev` or whatever is appropriate to your `zappa_settings.json` configuration.
 6. Provide your Facebook App with the appropriate callback URL that Zappa will have just provided you when it finished running. It will look something like this: `https://3oaw0urnj3.execute-api.us-east-1.amazonaws.com/dev/webhook`
