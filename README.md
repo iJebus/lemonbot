@@ -6,8 +6,10 @@ Lemonbot is a basic Facebook chatbot that provides game time and team informatio
 
 ## How do I use it?
 
-1. Browse to the [LemonBot page](https://www.facebook.com/LemonBot-1763943487196046/) and click 'Message', or use [this link](http://m.me/1763943487196046) to open a conversation directly
-2. Send a message! It'll tell you what to do. If that's a bit daunting, the screenshot below covers all the functionality
+You can't actually use it, because it hasn't been reviewed/approved by Facebook to be used by anyone other than lemonbot admins. Sorry! :(
+
+1. ~~Browse to the [LemonBot page](https://www.facebook.com/LemonBot-1763943487196046/) and click 'Message', or use [this link](http://m.me/1763943487196046) to open a conversation directly~~
+2. ~~Send a message! It'll tell you what to do. If that's a bit daunting, the screenshot below covers all the functionality~~
 
 <img src="https://raw.githubusercontent.com/iJebus/lemonbot/gh-pages/images/demo.png" alt="example of lemonbot usage" style="width: 800px;"/>
 
